@@ -2321,7 +2321,6 @@ begin
 			HV <= HV_VCNT_EXT(7 downto 1) & HV8 & HV_HCNT(8 downto 1);
 		end if;
 
-		EXINT_PENDING_SET <= '0';
 		HINT_PENDING_SET <= '0';
 		VINT_TG68_PENDING_SET <= '0';
 		VINT_T80_SET <= '0';
@@ -3553,6 +3552,8 @@ begin
 				VINT_TG68_PENDING <= '0';
 			elsif HINT_FF = '1' then
 				HINT_PENDING <= '0';
+			elsif EXINT_FF = '1' then
+				EXINT_PENDING <= '0';
 			end if;
 		end if;
 		if EXINT_PENDING_SET = '1' then

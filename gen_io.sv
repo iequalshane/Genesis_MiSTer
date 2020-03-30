@@ -79,6 +79,7 @@ module gen_io
 	input      [7:0] DI,
 	output reg [7:0] DO,
 	output reg       DTACK_N,
+	output reg       HL,
 
 	input            PAL,
 	input            EXPORT
@@ -192,6 +193,8 @@ always @(posedge CLK) begin
 	reg mtrd,mtrd2;
 	reg [3:0] cnt;
 	reg [5:0] delay;
+	
+	HL <= 1'b1; // Not yet wired up
 	
 	if(!delay) begin
 		if(mtrd ^ MTR) delay <= 1;

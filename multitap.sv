@@ -63,6 +63,7 @@ module multitap
 	input  [7:0] DI,
 	output [7:0] DO,
 	output       DTACK_N,
+	output       HL,
 
 	input        JCART_SEL,
 	output[15:0] JCART_DO,

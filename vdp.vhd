@@ -3545,9 +3545,6 @@ begin
 		INTACK_D <= INTACK;
 		--acknowledge interrupts serially
 		if INTACK_D = '0' and INTACK = '1' then
-			if EXINT_FF = '1' then
-				EXINT_PENDING <= '0';
-			end if;
 			if VINT_TG68_FF = '1' then
 				VINT_TG68_PENDING <= '0';
 			elsif HINT_FF = '1' then

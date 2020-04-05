@@ -2309,15 +2309,12 @@ begin
 		OLD_HL <= HL;
 		if OLD_HL = '1' and HL = '0' and IE2 = '1' then
 			EXINT_PENDING_SET <= '1';
+			HV <= HV_VCNT_EXT(7 downto 1) & HV8 & HV_HCNT(8 downto 1);
 		else
 			EXINT_PENDING_SET <= '0';
 		end if;
 		
-		if M3 ='1' then	
-			if HL ='1' then
-				HV <= HV_VCNT_EXT(7 downto 1) & HV8 & HV_HCNT(8 downto 1);
-			end if;
-		else
+		if M3 ='0' then	
 			HV <= HV_VCNT_EXT(7 downto 1) & HV8 & HV_HCNT(8 downto 1);
 		end if;
 

@@ -2307,9 +2307,11 @@ begin
 	elsif rising_edge(CLK) then
 
 		OLD_HL <= HL;
-		if OLD_HL = '1' and HL = '0' and IE2 = '1' then
-			EXINT_PENDING_SET <= '1';
+		if OLD_HL = '1' and HL = '0' then
 			HV <= HV_VCNT_EXT(7 downto 1) & HV8 & HV_HCNT(8 downto 1);
+			if IE2 = '1' then
+				EXINT_PENDING_SET <= '1';
+			end if;
 		else
 			EXINT_PENDING_SET <= '0';
 		end if;

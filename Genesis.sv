@@ -177,7 +177,7 @@ assign LED_USER  = cart_download | sav_pending;
 // 0         1         2         3          4         5         6   
 // 01234567890123456789012345678901 23456789012345678901234567890123
 // 0123456789ABCDEFGHIJKLMNOPQRSTUV 0123456789ABCDEFGHIJKLMNOPQRSTUV
-// XXXXXXXXXXXX XXXXXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXXX               
+// XXXXXXXXXXXX XXXXXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXXX X             
 
 `include "build_id.v"
 localparam CONF_STR = {
@@ -215,6 +215,7 @@ localparam CONF_STR = {
 	"o89,Gun,Disabled,Joy1,Joy2,Mouse;",
 	"H4oA,Gun Btn,Joy,Mouse;",
 	"H4oBC,Cross,Small,Med,Big,None;",
+	"H4oI,NES Zapper,No,Yes",
 	"-;",
 	"o34,ROM Storage,Auto,SDRAM,DDR3;",
 	"-;",
@@ -641,6 +642,10 @@ lightgun lightgun
 	.BTN_MODE(gun_btn_mode),
 	.SIZE(status[44:43]),
 	.SENSOR_DELAY(gun_sensor_delay),
+	
+	.NES_ZAPPER(status[50]),
+	.ZAPPER_TRIGGER(~USER_IN[4]),
+	.ZAPPER_SENSOR(USER_IN[2]),
 
 	.TARGET(lg_target),
 	.SENSOR(lg_sensor),
@@ -973,13 +978,18 @@ always @(posedge clk_sys) begin
 		SERJOYSTICK[7] <= 0;
 		SER_OPT[0] <= status[4];
 		SER_OPT[1] <= ~status[4];
-		USER_OUT[1] <= SERCTL[0] ? SERJOYSTICKOUT[0] : 1'b1;
-		USER_OUT[0] <= SERCTL[1] ? SERJOYSTICKOUT[1] : 1'b1;
-		USER_OUT[5] <= SERCTL[2] ? SERJOYSTICKOUT[2] : 1'b1;
-		USER_OUT[3] <= SERCTL[3] ? SERJOYSTICKOUT[3] : 1'b1;
-		USER_OUT[2] <= SERCTL[4] ? SERJOYSTICKOUT[4] : 1'b1;
-		USER_OUT[6] <= SERCTL[5] ? SERJOYSTICKOUT[5] : 1'b1;
-		USER_OUT[4] <= SERCTL[6] ? SERJOYSTICKOUT[6] : 1'b1;
+		if (status[50]) begin
+			USER_OUT <= '1;
+		end
+		else begin
+			USER_OUT[1] <=  SERCTL[0] ? SERJOYSTICKOUT[0] : 1'b1;
+			USER_OUT[0] <= SERCTL[1] ? SERJOYSTICKOUT[1] : 1'b1;
+			USER_OUT[5] <= SERCTL[2] ? SERJOYSTICKOUT[2] : 1'b1;
+			USER_OUT[3] <= SERCTL[3] ? SERJOYSTICKOUT[3] : 1'b1;
+			USER_OUT[2] <= SERCTL[4] ? SERJOYSTICKOUT[4] : 1'b1;
+			USER_OUT[6] <= SERCTL[5] ? SERJOYSTICKOUT[5] : 1'b1;
+			USER_OUT[4] <= SERCTL[6] ? SERJOYSTICKOUT[6] : 1'b1;
+		end
 		
 		
 	end else begin

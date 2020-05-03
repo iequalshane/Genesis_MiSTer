@@ -22,6 +22,10 @@ module lightgun
 	
 	input  [7:0] SENSOR_DELAY,
 	
+	input        NES_ZAPPER,
+	input        ZAPPER_TRIGGER,
+	input        ZAPPER_SENSOR,
+	
 	output [2:0] TARGET,
 	output       SENSOR,
 	output       BTN_A,
@@ -56,8 +60,9 @@ always @(posedge CLK) begin
 	reg reload_pressed;
 	reg [2:0] reload_pend;
 	reg [2:0] reload;
+	reg zsensed;
 	
-	BTN_A <= reload ? 1'b1 : (reload_pend ? 1'b0 : (BTN_MODE ? MOUSE[0] : (JOY[4]|JOY[9])));
+	BTN_A <= reload ? 1'b1 : (reload_pend ? 1'b0 : (NES_ZAPPER ? ZAPPER_TRIGGER : (BTN_MODE ? MOUSE[0] : (JOY[4]|JOY[9]))));
 	if(BTN_MODE ? MOUSE[1] : (JOY[5]|JOY[10])) begin
 		if(RELOAD) begin
 			BTN_B <= 1'b0;
@@ -83,24 +88,26 @@ always @(posedge CLK) begin
 	endcase
 	
 	old_ms <= MOUSE[24];
-	if(MOUSE_XY) begin
-		if(old_ms ^ MOUSE[24]) begin
-			if(new_x[10]) lg_x <= 0;
-			else if(new_x[8] & (new_x[7] | new_x[6])) lg_x <= 320;
-			else lg_x <= new_x[8:0];
+	if(~NES_ZAPPER) begin
+		if(MOUSE_XY) begin
+			if(old_ms ^ MOUSE[24]) begin
+				if(new_x[10]) lg_x <= 0;
+				else if(new_x[8] & (new_x[7] | new_x[6])) lg_x <= 320;
+				else lg_x <= new_x[8:0];
 
-			if(new_y[9]) lg_y <= 0;
-			else if(new_y > vtotal) lg_y <= vtotal;
-			else lg_y <= new_y[8:0];
+				if(new_y[9]) lg_y <= 0;
+				else if(new_y > vtotal) lg_y <= vtotal;
+				else lg_y <= new_y[8:0];
+			end
 		end
-	end
-	else begin
-		if(H40) lg_x <= j_x + (j_x >> 2);
-		else lg_x <= j_x;
+		else begin
+			if(H40) lg_x <= j_x + (j_x >> 2);
+			else lg_x <= j_x;
 
-		if(j_y < 8) lg_y <= 0;
-		else if((j_y - 9'd8) > vtotal) lg_y <= vtotal;
-		else lg_y <= j_y - 9'd8;
+			if(j_y < 8) lg_y <= 0;
+			else if((j_y - 9'd8) > vtotal) lg_y <= vtotal;
+			else lg_y <= j_y - 9'd8;
+		end
 	end
 
 	if(CE_PIX) begin
@@ -116,15 +123,30 @@ always @(posedge CLK) begin
 			else if(~&vcnt) vcnt <= vcnt + 1'd1;
 		end
 		
+		if(~zsensed && ZAPPER_SENSOR) begin
+			zsensed <= 1'b1;
+			lg_y <= vcnt;
+			// Filtered X position because the zapper is noisy
+			if(HDE) begin
+				if(lg_x < hcnt) lg_x <= lg_x + ((hcnt - lg_x)  >> 3);
+				else            lg_x <= lg_x - ((lg_x - hcnt)  >> 3);
+			end
+			else begin
+				if(lg_x < (H40 ? 160 : 128)) lg_x <= lg_x - (lg_x >> 3);
+				else                         lg_x <= lg_x + (((H40 ? 320 : 256) - lg_x)  >> 3);
+			end
+		end
+		
 		old_vde <= VDE;
 		if(~old_vde & VDE) begin
-			x  <= lg_x;
+			x  <= lg_x/* + NES_ZAPPER ? 32 : 0*/;
 			y  <= lg_y;
 			xm <= lg_x - cross_sz;
 			xp <= lg_x + cross_sz;
 			ym <= lg_y - cross_sz;
 			yp <= lg_y + cross_sz;
-			offscreen <= !lg_y[7:1] || lg_y >= (vtotal-1'd1);
+			offscreen <= NES_ZAPPER ? ~zsensed : !lg_y[7:1] || lg_y >= (vtotal-1'd1);
+			zsensed <= 1'b0;
 			
 			if(reload_pend && !reload) begin
 				reload_pend <= reload_pend - 3'd1;
